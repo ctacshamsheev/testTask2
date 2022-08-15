@@ -12,6 +12,8 @@ public class Main {
         try {
             // ServiceBuilder build = new ServiceBuilder(new ArgsParser(args), DB_DRIVER, DB_CONNECTION,DB_USER, DB_PASSWORD );
             ServiceBuilder build = new ServiceBuilder(new ArgsParser(new String[]{"search", "in1.json", "out1.json"}), DB_DRIVER, DB_CONNECTION, DB_USER, DB_PASSWORD);
+            ServiceBuilder build2 = new ServiceBuilder(new ArgsParser(new String[]{"stat", "in2.json", "out2.json"}), DB_DRIVER, DB_CONNECTION, DB_USER, DB_PASSWORD);
+
         } catch (IllegalArgumentException | IOException e) {
             System.out.println(e.getMessage());
         }

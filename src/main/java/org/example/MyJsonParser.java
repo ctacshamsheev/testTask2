@@ -3,7 +3,7 @@ package org.example;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import java.sql.Connection;
+import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -12,16 +12,16 @@ import java.util.Iterator;
 public class MyJsonParser {
     JSONObject jsonObjectIn;
     JSONObject jsonObjectOut = null;
-    Connection connection;
+    MyDBConnection dbConnection;
 
-    public MyJsonParser(JSONObject jsonObjectIn, Connection connection) {
+    public MyJsonParser(JSONObject jsonObjectIn, MyDBConnection connection) {
         this.jsonObjectIn = jsonObjectIn;
-        this.connection = connection;
+        this.dbConnection = connection;
         this.jsonObjectOut = new JSONObject();
     }
 
 
-    public void searchParse() throws NullPointerException {
+    public void searchParse() throws SQLException {
         // получение массива
         jsonObjectOut.put("type", "search");
         JSONArray listOut = new JSONArray();
@@ -32,28 +32,23 @@ public class MyJsonParser {
             JSONObject innerObj = (JSONObject) i.next();
             JSONObject objOut = new JSONObject();
             objOut.put("criteria", innerObj);
-            JSONArray listOutResult = new JSONArray();
-
+            JSONArray listOutResult;
             if (innerObj.containsKey("lastName")) {
                 String lastName = (String) innerObj.get("lastName");
-                System.out.println(lastName);
-
+                listOutResult = dbConnection.getCriteriaLastName(lastName);
             } else if (innerObj.containsKey("minTimes")) {
                 String productName = (String) innerObj.get("productName");
-                System.out.println(productName);
                 long minTimes = (long) innerObj.get("minTimes");
-                System.out.println(minTimes);
-
+                listOutResult = dbConnection.getCriteriaProductNameminTimes(productName, minTimes);
             } else if (innerObj.containsKey("minExpenses")) {
                 long minExpenses = (long) innerObj.get("minExpenses");
-                System.out.println(minExpenses);
                 long maxExpenses = (long) innerObj.get("maxExpenses");
-                System.out.println(maxExpenses);
+                listOutResult = dbConnection.getCriteriaminmaxExpenses(minExpenses, maxExpenses);
             } else if (innerObj.containsKey("badCustomers")) {
                 long badCustomers = (long) innerObj.get("badCustomers");
-                System.out.println(badCustomers);
+                listOutResult = dbConnection.getCriteriaBadCustomers(badCustomers);
             } else {
-                throw new NullPointerException("unknown criterias");
+                throw new IllegalArgumentException("unknown criterias: "+ innerObj );
             }
             objOut.put("results", listOutResult);
             listOut.add(objOut);
@@ -61,22 +56,29 @@ public class MyJsonParser {
         jsonObjectOut.put("results", listOut);
     }
 
-    public void statParse() throws ParseException {
+    public void statParse() throws ParseException, SQLException {
+        jsonObjectOut.put("type", "stat");
         String startDateStr = (String) jsonObjectIn.get("startDate");
         String endDateStr = (String) jsonObjectIn.get("endDate");
-
-        System.out.println(startDateStr);
-        System.out.println(endDateStr);
-
         SimpleDateFormat simpleDateFormat1 = new SimpleDateFormat("yyyy-MM-dd");
-
         Date startDate = simpleDateFormat1.parse(startDateStr);
         Date endDate = simpleDateFormat1.parse(endDateStr);
-        System.out.println(startDate);
-        System.out.println(endDate);
+        long totalDays = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24) +1;
+        if (totalDays<=0 ) {
+            throw new IllegalArgumentException("Error date: startDate > endDate");
+        }
 
-//        "startDate": "2020-01-14", // Начальная дата
-//        "endDate": "2020-01-26" // Конечная дата
+        jsonObjectOut.put("totalDays", totalDays);
+
+        JSONArray listOut = new JSONArray();
+        listOut.add("1");
+
+
+        jsonObjectOut.put("customers", listOut);
+        jsonObjectOut.put("totalExpenses", dbConnection.getStatTotalExpenses( startDateStr ,endDateStr));
+        jsonObjectOut.put("avgExpenses", 3455.72);
+
+
 
     }
     //

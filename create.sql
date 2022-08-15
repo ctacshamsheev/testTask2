@@ -130,8 +130,8 @@ VALUES (29, '2022-02-17', 2, 2);
 
 SELECT productname, expenses, firstname, lastname, sale_date
 FROM sales
-        JOIN customers c on c.id = sales.customer
-        JOIN products p on p.id = sales.product;
+         JOIN customers c on c.id = sales.customer
+         JOIN products p on p.id = sales.product;
 -- WHERE p.productName = 'Хлеб';
 
 
@@ -145,28 +145,29 @@ WHERE lastname = 'Иванов';
 -- 2)))
 -- Название товара и число раз 
 -- поиск покупателей, купивших этот товар не менее, чем указанное число раз
-WITH ggg AS (SELECT c.id as customer_id, count(c.id) as kolvo
+WITH res AS (SELECT c.id as customer_id, count(c.id) as countsale
              FROM sales
-                      JOIN customers c on c.id = sales.customer
-                      JOIN products p on p.id = sales.product
+             JOIN customers c on c.id = sales.customer
+             JOIN products p on p.id = sales.product
              WHERE p.productName = 'Хлеб'
              GROUP BY c.id)
-SELECT firstname, lastname, kolvo as quantity
-FROM ggg
-         JOIN customers c on customer_id = c.id;
+SELECT firstname, lastname, countsale as quantity
+FROM res
+JOIN customers c on customer_id = c.id
+WHERE countsale >= 3;
 
 -- 3)))
 --	Минимальная и максимальная стоимость всех покупок
 -- поиск покупателей, у которых общая стоимость всех покупок за всё время попадает в интервал
 WITH customer_expenses AS (SELECT c.id, sum(expenses) as exp
                            FROM sales
-                                    JOIN products p on p.id = sales.product
-                                    JOIN customers c on c.id = sales.customer
+                           JOIN products p on p.id = sales.product
+                           JOIN customers c on c.id = sales.customer
                            group by c.id
                            ORDER BY c.id)
 SELECT firstname, lastname, exp
 FROM customer_expenses
-         JOIN customers c ON customer_expenses.id = c.id
+JOIN customers c ON customer_expenses.id = c.id
 WHERE exp > 100
   AND exp < 500
 ORDER BY exp DESC;
@@ -184,12 +185,24 @@ WITH customer_occurencies AS (SELECT c.id as customer_id, count(c.id) as occuren
 SELECT firstname, lastname, occurencies
 FROM customer_occurencies
          JOIN customers c on customer_id = c.id
-ORDER BY occurencies
-LIMIT 3;
+ORDER BY occurencies LIMIT 3;
 
 
 
-
--- [ // Данные по покупателям за этот период, упорядоченные по общей стоимости покупок по убыванию
+-- // Данные по покупателям за этот период, упорядоченные по общей стоимости покупок по убыванию
 -- // Фамилия и имя покупателя
 -- // Список всех уникальных товаров, купленных покупателем за этот период, упорядоченных по суммарной стоимости по убыванию
+
+-- // кто что купил
+-- SELECT productname, expenses, firstname, lastname, sale_date
+-- FROM sales
+--          JOIN customers c on c.id = sales.customer
+--          JOIN products p on p.id = sales.product
+-- WHERE sale_date >= DATE '2022-01-15' AND sale_date <= DATE '2022-02-15'
+-- ORDER BY sale_date, c.id
+
+-- // сумма покупок за период
+SELECT SUM (expenses) FROM sales
+                               JOIN customers c on c.id = sales.customer
+                               JOIN products p on p.id = sales.product
+WHERE sale_date >= DATE '2022-01-15' AND sale_date <= DATE '2022-02-15';

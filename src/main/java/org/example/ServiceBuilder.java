@@ -18,7 +18,7 @@ public class ServiceBuilder {
         try {
             MyJsonParser parser = new MyJsonParser(
                     (new JsonReader(argsParser.getInputFile())).getJsonObject(),
-                    (new MyDBConnection(dbDriver, dbConnection, dbUser, dbPassword)).getDBConnection());
+                    new MyDBConnection(dbDriver, dbConnection, dbUser, dbPassword));
             if (argsParser.isSearchOrStat()) {
                 parser.searchParse();
             } else {
