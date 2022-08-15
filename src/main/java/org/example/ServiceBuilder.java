@@ -3,25 +3,22 @@ package org.example;
 import java.io.IOException;
 
 public class ServiceBuilder {
-    JsonWriter writer;
 
     public ServiceBuilder(ArgsParser argsParser, String dbDriver, String dbConnection, String dbUser, String dbPassword) throws IOException {
-        writer = new JsonWriter(argsParser.getOutputFile());
+        JsonWriter writer = new JsonWriter(argsParser.getOutputFile()); // open output file
         try {
-            MyJsonParser parser = new MyJsonParser(
+            MyJsonParser parser = new MyJsonParser( // open input file and open DB
                     (new JsonReader(argsParser.getInputFile())).getJsonObject(),
                     new MyDBConnection(dbDriver, dbConnection, dbUser, dbPassword));
             if (argsParser.isSearchOrStat()) {
-                parser.searchParse();
+                parser.searchParse(); // search mode
             } else {
-                parser.statParse();
+                parser.statParse(); // stat mode
             }
-            writer.writeJson(parser.getJsonObjectOut());
+            writer.writeJson(parser.getJsonObjectOut()); // save result
         } catch (Exception e) {
-            // | IOException | ParseException
-            writer.writeError(e.getMessage());
+            writer.writeError(e.getMessage()); // if error - write in output file
             System.out.println(e.getMessage());
         }
-
     }
 }

@@ -16,8 +16,8 @@ public class JsonWriter {
     public void writeJson(JSONObject obj) throws IOException {
         saveAndCloseWriter(obj);
     }
+
     public void writeError(String message) throws IOException {
-        // writer.write(message);
         JSONObject obj = new JSONObject();
         obj.put("type", "error");
         obj.put("message", message);
