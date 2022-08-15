@@ -1,17 +1,9 @@
 package org.example;
 
-import org.json.simple.parser.ParseException;
-
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
 
 public class ServiceBuilder {
     JsonWriter writer;
-    ArgsParser argsParser;
 
     public ServiceBuilder(ArgsParser argsParser, String dbDriver, String dbConnection, String dbUser, String dbPassword) throws IOException {
         writer = new JsonWriter(argsParser.getOutputFile());

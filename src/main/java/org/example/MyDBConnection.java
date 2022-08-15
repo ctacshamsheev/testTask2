@@ -107,4 +107,81 @@ public class MyDBConnection {
         return result;
     }
 
+    public double getStatAvgExpenses(String startDateStr, String endDateStr) throws SQLException {
+        String SQL_SELECT = "WITH sum_sale AS (SELECT SUM(p.expenses) as sum_exp\n" +
+                "                  FROM sales\n" +
+                "                  JOIN customers c on c.id = sales.customer\n" +
+                "                  JOIN products p on p.id = sales.product\n" +
+                "WHERE sale_date >= DATE \'" + startDateStr + "\' AND sale_date <= DATE \'" + endDateStr + "\'\n" +
+                "                  GROUP BY c.id)\n" +
+                "SELECT AVG(sum_exp)\n" +
+                "FROM sum_sale;";
+
+        PreparedStatement preparedStatement = connection.prepareStatement(SQL_SELECT);
+        ResultSet resultSet = preparedStatement.executeQuery();
+        resultSet.next();
+        double result = resultSet.getDouble("avg");
+        return result;
+    }
+
+    public JSONArray getPreparedStatementProducts(String SQL_SELECT) throws SQLException {
+        JSONArray listOutResult = new JSONArray();
+        PreparedStatement preparedStatement = connection.prepareStatement(SQL_SELECT);
+        ResultSet resultSet = preparedStatement.executeQuery();
+        while (resultSet.next()) {
+            JSONObject objOut = new JSONObject();
+            String productname = resultSet.getString("productname");
+            long sum_exp = resultSet.getLong("sum_exp");
+
+            objOut.put("name", productname);
+
+            objOut.put("expenses", sum_exp);
+
+            listOutResult.add(objOut);
+        }
+        return listOutResult;
+    }
+
+    public JSONArray getPreparedStatementFirsNameWithLastName(String SQL_SELECT, String startDateStr, String endDateStr) throws SQLException {
+        JSONArray listOutResult = new JSONArray();
+        PreparedStatement preparedStatement = connection.prepareStatement(SQL_SELECT);
+        ResultSet resultSet = preparedStatement.executeQuery();
+        while (resultSet.next()) {
+            JSONObject objOut = new JSONObject();
+            String firstname = resultSet.getString("firstname");
+            String lastname = resultSet.getString("lastname");
+            long sum_exp = resultSet.getLong("sum_exp");
+            long id = resultSet.getLong("id");
+            objOut.put("name", lastname + " " + firstname);
+            String SQL_NEW_SELECT = "WITH customer_occurencies AS (SELECT p.id as pid, expenses, c.id as cid\n" +
+                    "                              FROM sales\n" +
+                    "                                       JOIN customers c on c.id = sales.customer\n" +
+                    "                                       JOIN products p on p.id = sales.product\n" +
+                    "WHERE sale_date >= DATE \'" + startDateStr + "\' AND sale_date <= DATE \'" + endDateStr + "\'\n" +
+                    "                              ORDER BY sale_date, cid)\n" +
+                    "SELECT pr.productname, sum(customer_occurencies.expenses) as sum_exp\n" +
+                    "FROM customer_occurencies\n" +
+                    "         JOIN products pr on pr.id = pid\n" +
+                    "WHERE cid = " + id + "\n" +
+                    "GROUP BY pr.productname\n" +
+                    "ORDER BY sum_exp DESC;";
+            JSONArray listProducts = getPreparedStatementProducts(SQL_NEW_SELECT);
+            objOut.put("purchases", listProducts);
+            objOut.put("totalExpenses", sum_exp);
+
+            listOutResult.add(objOut);
+        }
+        return listOutResult;
+    }
+
+    public JSONArray getStatCustomers(String startDateStr, String endDateStr) throws SQLException {
+        String SQL_SELECT = "SELECT c.id, firstname, lastname, SUM(p.expenses) as sum_exp\n" +
+                "FROM sales\n" +
+                "         JOIN customers c on c.id = sales.customer\n" +
+                "         JOIN products p on p.id = sales.product\n" +
+                "WHERE sale_date >= DATE \'" + startDateStr + "\' AND sale_date <= DATE \'" + endDateStr + "\'\n" +
+                "GROUP BY c.id\n" +
+                "ORDER BY sum_exp DESC;";
+        return getPreparedStatementFirsNameWithLastName(SQL_SELECT, startDateStr, endDateStr);
+    }
 }
